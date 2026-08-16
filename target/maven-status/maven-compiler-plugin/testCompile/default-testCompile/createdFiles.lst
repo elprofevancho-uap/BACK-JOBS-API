@@ -1,1 +1,3 @@
 com\uap\proiv\jobs\JobsApplicationTests.class
+com\uap\proiv\jobs\service\impl\JobServicelmplTest.class
+com\uap\proiv\jobs\service\impl\UserJobAssignedServiceImplTest.class
