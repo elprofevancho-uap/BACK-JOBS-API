@@ -1,34 +1,34 @@
 package com.uap.proiv.jobs.controller;
 
-import com.uap.proiv.jobs.service.JobService;
-import com.uap.proiv.jobs.service.UserJobAssignedService;
-import com.uap.proiv.jobs.service.UserService;
-
-import com.uap.proiv.jobs.dto.UserApiResponse;
-import com.uap.proiv.jobs.dto.UserJobAssigned;
-import com.uap.proiv.jobs.dto.AssignRequest;
-import com.uap.proiv.jobs.dto.Job;
-import com.uap.proiv.jobs.dto.User;
-
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uap.proiv.jobs.dto.AssignRequest;
+import com.uap.proiv.jobs.dto.Job;
+import com.uap.proiv.jobs.dto.User;
+import com.uap.proiv.jobs.dto.UserApiResponse;
+import com.uap.proiv.jobs.dto.UserJobAssigned;
+import com.uap.proiv.jobs.service.JobService;
+import com.uap.proiv.jobs.service.UserJobAssignedService;
+import com.uap.proiv.jobs.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 
@@ -51,13 +51,16 @@ public class JobControllerTest{
     private UserApiResponse userApiResponse;
     private List<User> users;
 
-    private ObjectMapper;
+    private ObjectMapper objectMapper;
     
 
     @BeforeEach
     void setup() {
         
-        mockMvc = MockMvcBuilders.standaloneSetup(jobController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(
+            jobController,
+            new UserController(userService),
+            new AssignController(userJobAssignedService)).build();
         objectMapper = new ObjectMapper();
                 
 
@@ -108,15 +111,15 @@ public class JobControllerTest{
         .thenThrow(new RuntimeException("MSG"))  
         .thenReturn(userApiResponse);
 
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()))
+        mockMvc.perform(get("/api/user/1")).andExpect((status().isOk()))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(2))
         .andExpect(jsonPath(("$.page")).value(1))
         .andExpect(jsonPath("$.total").value(2));
 
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().is5xxServerError()));
+        mockMvc.perform(get("/api/user/1")).andExpect((status().is5xxServerError()));
 
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()));
+        mockMvc.perform(get("/api/user/1")).andExpect((status().isOk()));
     }  
 
         @Test
@@ -124,7 +127,7 @@ public class JobControllerTest{
         void getUsers_exception() throws Exception {
             when(userService.search(2)).thenThrow(new RuntimeException("Service Error"));
 
-            mockMvc.perform(get("/api/job/users/2"))
+            mockMvc.perform(get("/api/user/2"))
                 .andExpect(status().is5xxServerError())
                 .andExpect(content().string("Service Error"));
         }
@@ -137,7 +140,7 @@ public class JobControllerTest{
         userApiResponse.setPage(3);
         when(userService.search(1)).thenReturn(userApiResponse);
 
-        mockMvc.perform(get("/api/job/users/1")).andExpect((status().isOk()))
+        mockMvc.perform(get("/api/user/1")).andExpect((status().isOk()))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(2))
         .andExpect(jsonPath(("$.page")).value(3))
@@ -165,20 +168,20 @@ public class JobControllerTest{
             job2.setHours(1500);
             job2.setResources(2);
 
-            List<UserJobAssigned> userJobAssigneList = new ArrayList();
+            List<UserJobAssigned> userJobAssignedList = new ArrayList();
             userJobAssignedList.add(new UserJobAssigned(users, job1));
             userJobAssignedList.add(new UserJobAssigned(List.of(users.getFirst()), job2));
 
             when(userJobAssignedService.assign()).thenReturn(userJobAssignedList);
 
-            mockMvc.perform(post("/api/job/assign")
+            mockMvc.perform(post("/api/assign")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(assignRequest))
+                .content(objectMapper.writeValueAsString(assignRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.Assign").isNotEmpty())
-                .andExpect(jsonPath("$.Assign[0].job.name").value("Developer"))
-                .andExpect(jsonPath("$.Assign[1].job.name").value("Designer"))
-                .andExpect(jsonPath("$.Assign[0].users[0].first_name").value("John"))
+                .andExpect(jsonPath("$.Assign[0].job.name").value("Software Engineer"))
+                .andExpect(jsonPath("$.Assign[1].job.name").value("Data Analyst"))
+                .andExpect(jsonPath("$.Assign[0].users[0].first_name").value("juan"))
                 .andExpect(jsonPath("$.Request_Number").value(123))
                 .andExpect(jsonPath("$.Client").value("Name"));
         }

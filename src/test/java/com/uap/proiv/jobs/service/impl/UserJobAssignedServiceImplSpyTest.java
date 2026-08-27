@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import org.mockito.Spy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +28,7 @@ import com.uap.proiv.jobs.service.AssignedService;
 import com.uap.proiv.jobs.service.JobService;
 import com.uap.proiv.jobs.service.UserService;
 
-@ExtendWidth(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class UserJobAssignedServiceImplSpyTest {
     @Mock
     JobService jobService;
@@ -34,14 +36,11 @@ public class UserJobAssignedServiceImplSpyTest {
     @Mock
     UserService userService;
 
-    @Spy
-    AssignedService assignedService;
-
     @Mock
     AssignedService assignedService;
 
     @InjectMocks
-    UserJobAssignedServiceImplTest serviceImpl;
+    UserJobAssignedServiceImpl serviceImpl;
 
     List<Job> jobs;
     List<User> users;
@@ -91,17 +90,17 @@ public class UserJobAssignedServiceImplSpyTest {
         userApiResponse.setTotalPages(1);
         userApiResponse.setData(users);
 
-        assignedResponse = new ArrayList<>();
-        assignedResponse.add(new AssignedResponse(1,2));
-        assignedResponse.add(new AssignedResponse(2,1));
+        assignedResponses = new ArrayList<>();
+        assignedResponses.add(new AssignedResponse(1,10));
+        assignedResponses.add(new AssignedResponse(2,20));
         }
 
     @Test
-    @DisplayName("Verifica la respuesta de una sola página de usuarios y asignaciones de trabajo");
+    @DisplayName("Verifica la respuesta de una sola página de usuarios y asignaciones de trabajo")
     void assign_succesOnePage(){
         when(jobService.getAllJobs()).thenReturn(jobs);
         when(userService.search(1)).thenReturn(userApiResponse);
-        doReturn(assignedResponse).when(assignedService).create(any(),any());
+        doReturn(assignedResponses).when(assignedService).create(any(),any());
 
         List<UserJobAssigned> result = serviceImpl.assign();
 
