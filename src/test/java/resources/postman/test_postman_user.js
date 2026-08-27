@@ -6,7 +6,7 @@ pm.test("Estado de respuesta es 200 OK", function () {
 // 2. Validar tipos de datos de las propiedades principales
 pm.test("La estructura principal tiene los tipos correctos", function () {
     const json = pm.response.json();
-    pm.expect(json.page).to.be.a('string');
+    pm.expect(json.page).to.be.a('number');
     pm.expect(json.per_page).to.be.a('number');
     pm.expect(json.total).to.be.a('number');
     pm.expect(json.total_pages).to.be.a('number');
@@ -31,5 +31,8 @@ pm.test("Los IDs de los usuarios coinciden con su posición indexada (id = index
     const json = pm.response.json();
     json.data.forEach((user, index) => {
         pm.expect(user.id).to.eql(index + 1);
+        const esperado = index + 1;
+        pm.expect(user.id).to.equal(esperado, `Error en la posición ${index}: se esperaba id=${esperado} pero se obtuvo id=${user.id}`);
+
     });
 });
