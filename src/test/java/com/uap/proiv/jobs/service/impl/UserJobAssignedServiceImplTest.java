@@ -4,6 +4,8 @@ import com.uap.proiv.jobs.client.JobApiRepository;
 import com.uap.proiv.jobs.dto.AssignedResponse;
 import com.uap.proiv.jobs.dto.Job;
 import com.uap.proiv.jobs.dto.UserApiResponse;
+import com.uap.proiv.jobs.dto.User;
+import com.uap.proiv.jobs.dto.UserJobAssigned;
 import com.uap.proiv.jobs.service.AssignedService;
 import com.uap.proiv.jobs.service.JobService;
 import com.uap.proiv.jobs.service.UserService;
@@ -22,11 +24,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
-@ExtendWidth(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class UserJobAssignedServiceImplTest {
     @Mock
     JobService jobService;
@@ -38,7 +42,7 @@ public class UserJobAssignedServiceImplTest {
     AssignedService assignedService;
 
     @InjectMocks
-    UserJobAssignedServiceImplTest serviceImpl;
+    UserJobAssignedServiceImpl serviceImpl;
 
     List<Job> jobs;
     List<User> users;
@@ -88,17 +92,17 @@ public class UserJobAssignedServiceImplTest {
         userApiResponse.setTotalPages(1);
         userApiResponse.setData(users);
 
-        assignedResponse = new ArrayList<>();
-        assignedResponse.add(new AssignedResponse(1,2));
-        assignedResponse.add(new AssignedResponse(2,1));
+        assignedResponses = new ArrayList<>();
+        assignedResponses.add(new AssignedResponse(1,10));
+        assignedResponses.add(new AssignedResponse(2,20));
         }
 
     @Test
-    @DisplayName("Verifica la respuesta de una sola página de usuarios y asignaciones de trabajo");
+    @DisplayName("Verifica la respuesta de una sola página de usuarios y asignaciones de trabajo")
     void assign_succesOnePage(){
         when(jobService.getAllJobs()).thenReturn(jobs);
         when(userService.search(1)).thenReturn(userApiResponse);
-        when(assignedService.create(jobs,List.of(10,20))).thenReturn(assignedResponse);
+        when(assignedService.create(jobs,List.of(10,20))).thenReturn(assignedResponses);
 
         List<UserJobAssigned> result = serviceImpl.assign();
 
@@ -109,7 +113,5 @@ public class UserJobAssignedServiceImplTest {
         verify(jobService, times(1)).getAllJobs();
         verify(userService, times(1)).search(1);
         verify(assignedService, times(1)).create(jobs, List.of(10,20));
-    }
-
-    
+    }    
 }

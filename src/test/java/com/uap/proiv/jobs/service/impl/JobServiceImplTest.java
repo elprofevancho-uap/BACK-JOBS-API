@@ -1,24 +1,25 @@
 package com.uap.proiv.jobs.service.impl;
 
-import com.uap.proiv.jobs.client.JobApiRepository;
-import com.uap.proiv.jobs.dto.Job;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.beans.Transient;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.uap.proiv.jobs.client.JobApiRepository;
+import com.uap.proiv.jobs.dto.Job;
 
 @ExtendWith(MockitoExtension.class)
 class JobServiceImplTest {
@@ -64,8 +65,8 @@ class JobServiceImplTest {
         List<Job> result = jobServiceImpl.getAllJobs();
 
         assertNotNull(result);
-        assertEquals(3, result.size());
-        assertEquals("Developer", result.get(0).getName());
+        assertEquals(2, result.size());
+        assertEquals("Software Engineer", result.get(0).getName());
 
         verify(jobApiRepository,
             times(1)).getAllJobs();
