@@ -1,15 +1,21 @@
 package com.uap.proiv.jobs.service.impl;
 
-import com.uap.proiv.jobs.dto.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.uap.proiv.jobs.dto.AssignedResponse;
+import com.uap.proiv.jobs.dto.Job;
+import com.uap.proiv.jobs.dto.User;
+import com.uap.proiv.jobs.dto.UserApiResponse;
+import com.uap.proiv.jobs.dto.UserJobAssigned;
 import com.uap.proiv.jobs.service.AssignedService;
 import com.uap.proiv.jobs.service.JobService;
 import com.uap.proiv.jobs.service.UserJobAssignedService;
 import com.uap.proiv.jobs.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class UserJobAssignedServiceImpl implements UserJobAssignedService {
@@ -34,7 +40,7 @@ public class UserJobAssignedServiceImpl implements UserJobAssignedService {
                 users.addAll(userApiResponse.getData());
             }
         }
-        List<AssignedResponse> assigned = assignedService.create(jobs, users.stream().map(User::getId).toList());
+        List<AssignedResponse> assigned = assignedService.create(jobs, users.stream().map(User::getId).collect(Collectors.toList()));
 
         return jobs.stream().map(job -> {
            List<User> usersJob = assigned.stream().filter(a -> a.jobId() == job.getId())

@@ -60,6 +60,10 @@ public class UserApiRepository {
             throw new RuntimeException("Error al conectar con la API de usuarios: " + e.getMessage(), e);
         }
     }
+    public User getUserById(int id) {
+        return getUsers(1).getData().stream().filter(user -> id == user.getId()).findFirst().orElse(null);
+    }
+/*
 
     public User getUserById(int id) {
         try {
@@ -83,7 +87,7 @@ public class UserApiRepository {
         } catch (Exception e) {
             throw new RuntimeException("Error al conectar con la API de usuarios: " + e.getMessage(), e);
         }
-    }
+    }*/
 
     public void updateUser(User user) {
         try {

@@ -1,6 +1,7 @@
 package com.uap.proiv.jobs.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -13,6 +14,7 @@ public class User {
     @JsonProperty("last_name")
     private String lastName;
     private String avatar;
+    private int jobId;
 
     public int getId() {
         return id;
@@ -52,6 +54,14 @@ public class User {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public int getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(int jobId) {
+        this.jobId = jobId;
     }
 
     @Override
