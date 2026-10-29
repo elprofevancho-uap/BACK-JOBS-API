@@ -8,24 +8,24 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test; // Permite ejecutar los casos de prueba con JUnit 5
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.MediaType;
+import org.springframework.http.MediaType; // Define el formato de las solicitudes y respuestas HTTP
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals; // Comprueba los encabezados enviados a la API simulada
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -55,9 +55,10 @@ public class UserControllerIntegrationTest {
 
     @TestConfiguration
     static class TestConfig {
+        // Sustituye el repositorio real por uno conectado al servidor simulado.
         @Bean
         @Primary
-        public  UserApiRepository userApiRepository(ObjectMapper objectMapper){
+        public UserApiRepository userApiRepository(ObjectMapper objectMapper) {
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
                     .build();
@@ -71,13 +72,14 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("GET api/users/id/{id} integracion UserController, UserService, UserRepository, mock api externa")
     void getUserById() throws Exception {
+
         String jsonResponse = """
                 {
-                   "id": 2,
-                   "email": "juan@gmail.com",
-                   "first_name": "Juan",
-                   "last_name": "Perez",
-                   "avatar": "https://reqres.in/img/faces/2.jpg"
+                    "id": 2,
+                    "email": "juan@gmail.com",
+                    "first_name": "Juan",
+                    "last_name": "Perez",
+                    "avatar": "https://reqres.in/img/faces/2.jpg"
                 }
                 """;
         mockWebServer.enqueue(new MockResponse()
@@ -87,7 +89,7 @@ public class UserControllerIntegrationTest {
         );
 
         mockMvc.perform(get("/api/user/id/2"))
-        .andExpect(status().isOk())
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(2))
                 .andExpect(jsonPath("$.email").value("juan@gmail.com"))
@@ -98,7 +100,6 @@ public class UserControllerIntegrationTest {
         RecordedRequest request = mockWebServer.takeRequest();
         assertEquals("application/json", request.getHeader("Accept"));
         assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
-
     }
 
     @Test
@@ -107,7 +108,7 @@ public class UserControllerIntegrationTest {
         String updateResponse = """
                 {
                  "name": "Carlos",
-                 "job": "Analista"
+                 "job": "Analista",
                  "updatedAt": "2024-01-01T12:00:00.000Z"
                 }
                 """;
@@ -123,15 +124,18 @@ public class UserControllerIntegrationTest {
                     "id": 1,
                     "first_name": "Carlos",
                     "last_name": "Perez"
-¡                }
+                }
                 """;
 
         mockMvc.perform(post("/api/user/update")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userJson))
-                .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(status().isOk());
 
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertEquals("/api/users/1", request.getPath());
+        assertEquals("application/json", request.getHeader("Accept"));
+        assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
     }
 
 }
