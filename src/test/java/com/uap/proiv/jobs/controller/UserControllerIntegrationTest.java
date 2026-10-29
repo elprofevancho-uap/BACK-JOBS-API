@@ -73,11 +73,17 @@ public class UserControllerIntegrationTest {
     void getUserById() throws Exception {
         String jsonResponse = """
                 {
-                   "id": 2,
-                   "email": "juan@gmail.com",
-                   "first_name": "Juan",
-                   "last_name": "Perez",
-                   "avatar": "https://reqres.in/img/faces/2.jpg"
+                  "page": 1,
+                  "per_page": 1,
+                  "total": 1,
+                  "total_pages": 1,
+                  "data": [{
+                    "id": 2,
+                    "email": "juan@gmail.com",
+                    "first_name": "Juan",
+                    "last_name": "Perez",
+                    "avatar": "https://reqres.in/img/faces/2.jpg"
+                  }]
                 }
                 """;
         mockWebServer.enqueue(new MockResponse()
@@ -107,7 +113,7 @@ public class UserControllerIntegrationTest {
         String updateResponse = """
                 {
                  "name": "Carlos",
-                 "job": "Analista"
+                 "job": "Analista",
                  "updatedAt": "2024-01-01T12:00:00.000Z"
                 }
                 """;
@@ -123,14 +129,14 @@ public class UserControllerIntegrationTest {
                     "id": 1,
                     "first_name": "Carlos",
                     "last_name": "Perez"
-¡                }
+                }
                 """;
 
         mockMvc.perform(post("/api/user/update")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userJson))
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(content().string("This response is intentionally incorrect"));
 
     }
 
