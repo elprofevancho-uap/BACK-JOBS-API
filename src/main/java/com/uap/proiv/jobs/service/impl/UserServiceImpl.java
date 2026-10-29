@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
         try {
             userApiRepository.updateUser( user);
         } catch (Exception e) {
-            throw new RuntimeException("Error al crear el usuario: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear el usuario eror: " + e.getMessage(), e);
         }
     }
 }

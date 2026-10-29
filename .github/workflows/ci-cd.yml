@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-  # 1. Validación de código con SonarQube (Solo corre mientras el PR está ABIERTO)
+  # 1. Validación de código con SonarQube (Solo para PRs desde ramas 'fix/')
   sonar-validation:
     if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'fix/')
     runs-on: ubuntu-latest
@@ -24,19 +24,20 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Se utiliza el nombre calificado del plugin para corregir el error [9]
       - name: Compilar y Analizar con SonarQube
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn clean verify sonar:sonar \
+          mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
             -Dsonar.projectKey=elprofevancho-uap_BACK-JOBS-API \
             -Dsonar.organization=elprofevancho-uap \
             -Dsonar.host.url=https://sonarcloud.io
 
-  # 2. Versionado y Despliegue en Render (Solo cuando el PR desde 'fix/' fue FUSIONADO exitosamente)
-  release-and-deploy:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'fix/')
+  # 2. Generación de versión (Solo corre mientras el PR desde 'release/' está ABIERTO)
+  create-release-version:
+    if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
@@ -49,13 +50,23 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Crea el Tag y la versión antes de fusionar el código
       - name: Crear Versión / Release
         id: create_release
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Este paso envía la orden a Render. Solo aquí se ejecutará el deploy real en el servidor.
+    # 3. Despliegue en Render
+  deploy:
+    # 🚀 AHORA CORRE SI: El PR se fusionó OR si es un PR abierto que viene de una rama 'release/'
+    if: >
+      github.event.pull_request.merged == true || 
+      (github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/'))
+    runs-on: ubuntu-latest
+    steps:
       - name: Forzar Despliegue en Render via Actions
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+
