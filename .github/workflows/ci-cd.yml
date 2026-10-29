@@ -57,12 +57,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 3. Despliegue en Render (Solo cuando un PR de 'release/' o 'fix/' se fusiona con éxito a main)
+    # 3. Despliegue en Render
   deploy:
-    if: github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'fix/'))
+    # 🚀 AHORA CORRE SI: El PR se fusionó OR si es un PR abierto que viene de una rama 'release/'
+    if: >
+      github.event.pull_request.merged == true || 
+      (github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/'))
     runs-on: ubuntu-latest
     steps:
       - name: Forzar Despliegue en Render via Actions
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
 
