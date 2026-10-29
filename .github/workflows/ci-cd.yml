@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-  # 1. Validación de código con SonarQube (Solo para PRs desde ramas 'fix/')
+  # 1. Validación de código con SonarQube
   sonar-validation:
     if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'fix/')
     runs-on: ubuntu-latest
@@ -24,8 +24,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Se utiliza el nombre calificado del plugin para corregir el error [9]
-      - name: Compilar y Analizar con SonarQube
+      # 📍 AQUÍ VA EL NUEVO FRAGMENTO ACTUALIZADO:
+      - name: Compilar, Ejecutar Tests y Analizar con SonarQube
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -33,9 +33,11 @@ jobs:
           mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
             -Dsonar.projectKey=elprofevancho-uap_BACK-JOBS-API \
             -Dsonar.organization=elprofevancho-uap \
-            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
-  # 2. Generación de versión (Solo corre mientras el PR desde 'release/' está ABIERTO)
+  # 2. Generación de versión (Solo para ramas 'release/')
   create-release-version:
     if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
@@ -50,16 +52,14 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Crea el Tag y la versión antes de fusionar el código
       - name: Crear Versión / Release
         id: create_release
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 3. Despliegue en Render
+  # 3. Despliegue en Render
   deploy:
-    # 🚀 AHORA CORRE SI: El PR se fusionó OR si es un PR abierto que viene de una rama 'release/'
     if: >
       github.event.pull_request.merged == true || 
       (github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/'))
@@ -68,5 +68,3 @@ jobs:
       - name: Forzar Despliegue en Render via Actions
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-
-
