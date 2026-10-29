@@ -22,8 +22,8 @@ public class GraphqlController {
 
     @Autowired
     public GraphqlController(UserService userService,
-                             JobService jobService,
-                             UserJobAssignedService userJobAssignedService) {
+        JobService jobService,
+        UserJobAssignedService userJobAssignedService) {
         this.userService = userService;
         this.jobService = jobService;
         this.userJobAssignedService = userJobAssignedService;
@@ -39,6 +39,11 @@ public class GraphqlController {
         return userService.searchById(id);
     }
 
+    @QueryMapping
+    public Job jobById(@Argument int id) {
+        return jobService.getJobById(id);
+    }
+
     @SchemaMapping(typeName = "User", field = "job")
     public Job job(User user) {
         return jobService.getJobById(user.getJobId());
@@ -47,6 +52,17 @@ public class GraphqlController {
     @MutationMapping
     public Job addJob(@Argument JobRequest request) {
         return jobService.add(request);
+    }
+
+    @MutationMapping
+    public User updateUser(@Argument UserRequest request) {
+        User user = new User();
+        user.setId(request.getId());
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        userService.update(user);
+    return user;
     }
 
 }
