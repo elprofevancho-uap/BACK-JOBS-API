@@ -7,9 +7,9 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-  # 1. Validación de código (Corre para ramas fix/ y release/ mientras el PR esté abierto)
+  # 1. Validación de código con SonarQube (Solo para PRs desde ramas 'fix/')
   sonar-validation:
-    if: github.event.pull_request.merged == false && (startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'release/'))
+    if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'fix/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
@@ -24,26 +24,24 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Se utiliza el nombre calificado del plugin para corregir el error [9]
       - name: Compilar y Analizar con SonarQube
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn clean verify sonar:sonar \
+          mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
             -Dsonar.projectKey=elprofevancho-uap_BACK-JOBS-API \
             -Dsonar.organization=elprofevancho-uap \
             -Dsonar.host.url=https://sonarcloud.io
 
-  # 2. Creación de versión AUTOMÁTICA (Corre en la rama origen MIENTRAS el PR de release sigue abierto)
+  # 2. Generación de versión (Solo corre mientras el PR desde 'release/' está ABIERTO)
   create-release-version:
     if: github.event.pull_request.merged == false && startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }} # Se posiciona en la rama release/* para meter los tags de versión aquí
 
       - name: Configurar Java 21
         uses: actions/setup-java@v4
@@ -52,17 +50,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Crear Versión Automática (Tags)
-        id: semantic_release
+      # Crea el Tag y la versión antes de fusionar el código
+      - name: Crear Versión / Release
+        id: create_release
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 3. Despliegue en Render (Solo se ejecuta cuando el PR es aprobado y fusionado en main)
+  # 3. Despliegue en Render (Solo cuando un PR de 'release/' o 'fix/' se fusiona con éxito a main)
   deploy:
-    if: github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'fix/') || startsWith(github.event.pull_request.head.ref, 'release/'))
+    if: github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'fix/'))
     runs-on: ubuntu-latest
     steps:
-      - name: Desplegar en Render via Webhook
+      - name: Forzar Despliegue en Render via Actions
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
